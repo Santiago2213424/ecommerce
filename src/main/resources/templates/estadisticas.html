@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Estadísticas | Smart Store Admin</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- ICONOS (para carrito y usuario en blanco) -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background:#f5f7fb;
+            font-family:'Poppins', sans-serif;
+            margin:0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background:#0A3D62;
+            padding:14px 30px !important;
+        }
+        .navbar a {
+            color:white !important;
+            font-weight:600;
+            font-size:18px;
+            text-decoration:none !important;
+        }
+
+        .menu-icon,
+        .menu-icon:focus,
+        .menu-icon:active,
+        .menu-icon:hover {
+            text-decoration:none !important;
+            outline:none !important;
+            border:none !important;
+            box-shadow:none !important;
+            color:white !important;
+        }
+
+        .nav-icon-link {
+            font-size:25px;
+            color:white !important;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+        }
+
+        /* SIDEBAR */
+        #sideMenu {
+            position:fixed;
+            top:0;
+            left:-260px;
+            width:260px;
+            height:100vh;
+            background:#0A3D62;
+            color:white;
+            padding:20px;
+            transition:left .3s;
+            z-index:3000;
+        }
+        #sideMenu a {
+            display:block;
+            padding:10px;
+            border-radius:6px;
+            color:white !important;
+            margin-bottom:6px;
+            text-decoration:none !important;
+        }
+        #sideMenu a:hover { background:#07456F; }
+        #closeMenu { font-size:26px; cursor:pointer; margin-bottom:15px; }
+
+        /* POPUP USUARIO */
+        #userPopup {
+            position:absolute;
+            right:0;
+            top:35px;
+            width:230px;
+            background:white;
+            border-radius:12px;
+            padding:18px 20px;
+            border:1px solid #dcdcdc;
+            box-shadow:0 4px 15px rgba(0,0,0,0.25);
+            display:none;
+            opacity:0;
+            transform:translateY(-10px);
+            transition:.25s;
+            text-align:center;
+            z-index:5000;
+        }
+        .fade-in  { opacity:1 !important; transform:translateY(0) !important; }
+        .fade-out { opacity:0 !important; transform:translateY(-10px) !important; }
+
+        #userPopup a {
+            display:block;
+            font-weight:600;
+            color:rgb(0,0,160) !important;
+            margin-top:10px;
+        }
+        #userPopup hr { margin:6px 0; }
+        #userPopup .logout-btn {
+            background:#ff4d4d;
+            color:white !important;
+            padding:10px 0;
+            border-radius:8px;
+            display:block;
+            width:100%;
+            margin-top:14px;
+        }
+
+        /* CONTENIDO */
+        .content { padding:40px; }
+        .metric-card {
+            background:white;
+            border-radius:18px;
+            padding:25px;
+            box-shadow:0 4px 14px rgba(0,0,0,0.08);
+            transition:.2s;
+            text-align:center;
+        }
+        .metric-card:hover { transform:translateY(-4px); }
+
+        .metric-number {
+            font-size:32px;
+            font-weight:700;
+            color:#0A3D62;
+        }
+        .metric-sub { color:#777; }
+
+        .chart-card {
+            background:white;
+            border-radius:18px;
+            padding:25px;
+            box-shadow:0 4px 14px rgba(0,0,0,0.08);
+        }
+
+        /* Para centrar los gráficos dentro de la tarjeta */
+        .chart-wrapper {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .chart-wrapper canvas {
+            max-width:100%;
+            height:260px !important; /* misma altura para todos */
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR (igual que en Usuarios) -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <span class="menu-icon"
+          style="font-size:26px; cursor:pointer;"
+          onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+        <!-- CARRITO -->
+        <a th:href="@{/carrito}" class="nav-icon-link">
+            <i class="bi bi-cart3"></i>
+        </a>
+
+        <!-- USUARIO -->
+        <div class="position-relative">
+            <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+                <i class="bi bi-person-circle"></i>
+            </span>
+
+            <div id="userPopup">
+                <p style="margin:0; font-size:18px; font-weight:700;">
+                    Hola <span sec:authentication="principal.nombre"></span>!
+                </p>
+
+                <a th:href="@{/perfil}">Ver perfil</a>
+                <a th:href="@{/mis-pedidos}">Mis compras</a>
+                <hr>
+                <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+    <a href="/dashboard">Pagina Principal</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+    <a href="/usuarios">Usuarios</a>
+    <a href="/estadisticas">Estadísticas</a>
+</div>
+
+<!-- CONTENIDO -->
+<div class="content container">
+
+    <h2 class="fw-bold mb-4">Dashboard de Estadísticas</h2>
+
+    <!-- TARJETAS DE MÉTRICAS -->
+    <div class="row g-4 mb-2">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-number" th:text="${usuariosTotales}">0</div>
+                <div class="metric-sub">Usuarios Totales</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-number" th:text="${productosTotales}">0</div>
+                <div class="metric-sub">Productos Totales</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-number" th:text="${mesesConVentas}">0</div>
+                <div class="metric-sub">Meses con Ventas</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-number" th:text="${productosConMovimiento}">0</div>
+                <div class="metric-sub">Productos con Movimiento</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS (2x2, todos centrados) -->
+    <div class="row g-4">
+        <!-- Ventas por Mes -->
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5 class="fw-bold text-center mb-3">Ventas por Mes</h5>
+                <div class="chart-wrapper">
+                    <canvas id="ventasChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos más vendidos -->
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5 class="fw-bold text-center mb-3">Productos Más Vendidos</h5>
+                <div class="chart-wrapper">
+                    <canvas id="productosChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ventas por categoría -->
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5 class="fw-bold text-center mb-3">Ventas por Categoría</h5>
+                <div class="chart-wrapper">
+                    <canvas id="categoriaChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participación porcentual -->
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h5 class="fw-bold text-center mb-3">Participación (%)</h5>
+                <div class="chart-wrapper">
+                    <canvas id="participacionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+/* ============================
+    VENTAS POR MES
+============================ */
+const ventas = /*[[${ventasMes}]]*/ [];
+const ventasLabels = ventas.map(v => v.mes + "/" + v.anio);
+const ventasData   = ventas.map(v => v.total);
+
+new Chart(document.getElementById("ventasChart"), {
+    type:"line",
+    data:{
+        labels:ventasLabels,
+        datasets:[{
+            label:"Ventas (S/.)",
+            data:ventasData,
+            borderColor:"#0A3D62",
+            backgroundColor:"rgba(10,61,98,0.20)",
+            borderWidth:3,
+            tension:0.4,
+            pointRadius:4
+        }]
+    },
+    options:{
+        maintainAspectRatio:false,
+        plugins:{
+            legend:{ position:"top" }
+        }
+    }
+});
+
+/* ============================
+    PRODUCTOS MÁS VENDIDOS
+============================ */
+const productos = /*[[${productosMasVendidos}]]*/ [];
+const productosLabels = productos.map(p => p.producto);
+const productosData   = productos.map(p => p.cantidad);
+
+new Chart(document.getElementById("productosChart"), {
+    type:"doughnut",
+    data:{
+        labels:productosLabels,
+        datasets:[{
+            label:"Cantidad Vendida",
+            data:productosData,
+            backgroundColor:["#3498DB","#9B59B6","#2ECC71","#F1C40F","#E74C3C"]
+        }]
+    },
+    options:{
+        maintainAspectRatio:false,
+        plugins:{
+            legend:{ position:"top", align:"center" }
+        },
+        cutout:"55%"
+    }
+});
+
+/* ============================
+    VENTAS POR CATEGORÍA
+============================ */
+const categorias = /*[[${ventasPorCategoria}]]*/ [];
+const catLabels = categorias.map(c => c.categoria);
+const catData   = categorias.map(c => c.total);
+
+new Chart(document.getElementById("categoriaChart"), {
+    type:"bar",
+    data:{
+        labels:catLabels,
+        datasets:[{
+            label:"Total Vendido (S/.)",
+            data:catData,
+            backgroundColor:"#0A3D62"
+        }]
+    },
+    options:{
+        maintainAspectRatio:false,
+        plugins:{ legend:{ position:"top" } },
+        scales:{ y:{ beginAtZero:true } }
+    }
+});
+
+/* ============================
+    PARTICIPACIÓN PORCENTAJE
+============================ */
+const participacionLabels = catLabels;
+const participacionData   = catData;
+new Chart(document.getElementById("participacionChart"), {
+    type:"pie",
+    data:{
+        labels:participacionLabels,
+        datasets:[{
+            label:"Participación",
+            data:participacionData,
+            backgroundColor:["#3498DB","#9B59B6","#2ECC71","#F1C40F","#E74C3C"]
+        }]
+    },
+    options:{
+        maintainAspectRatio:false,
+        plugins:{
+            legend:{ position:"top", align:"center" }
+        }
+    }
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// ==== SIDEBAR ====
+function openMenu() {
+    const menu = document.getElementById("sideMenu");
+    if (menu) menu.style.left = "0";
+}
+function closeMenu() {
+    const menu = document.getElementById("sideMenu");
+    if (menu) menu.style.left = "-260px";
+}
+
+document.addEventListener("click", (e) => {
+    const sideMenu = document.getElementById("sideMenu");
+    if (!sideMenu) return;
+
+    const isOpen = sideMenu.style.left === "0px";
+    if (!isOpen) return;
+
+    const clickedInsideMenu = sideMenu.contains(e.target);
+    const clickedOpenButton = e.target.getAttribute("onclick") === "openMenu()";
+
+    if (!clickedInsideMenu && !clickedOpenButton) {
+        closeMenu();
+    }
+});
+
+// ==== POPUP USUARIO ====
+document.addEventListener("DOMContentLoaded", () => {
+    const userIcon = document.getElementById("userIcon");
+    const popup = document.getElementById("userPopup");
+
+    if (!(userIcon && popup)) return;
+
+    function showPopup() {
+        popup.style.display = "block";
+        requestAnimationFrame(() => popup.classList.add("fade-in"));
+    }
+    function hidePopup() {
+        popup.classList.remove("fade-in");
+        popup.classList.add("fade-out");
+        setTimeout(() => {
+            popup.style.display = "none";
+            popup.classList.remove("fade-out");
+        }, 250);
+    }
+
+    userIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        popup.style.display === "block" ? hidePopup() : showPopup();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target) && !userIcon.contains(e.target)) {
+            hidePopup();
+        }
+    });
+});
+</script>
+
+</body>
+</html>

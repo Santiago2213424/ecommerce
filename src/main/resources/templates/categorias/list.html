@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Categorías | Smart Store Admin</title>
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	
+
+  <style>
+      body {
+          background:#f4f6f9;
+          font-family:'Poppins', sans-serif;
+      }
+
+      /* NAVBAR */
+      .navbar {
+          background:#0A3D62;
+          padding:14px 30px !important;
+      }
+
+      .navbar a {
+          color:white !important;
+          font-weight:600;
+          font-size:18px;
+          text-decoration:none !important;
+      }
+
+      /* SIDEBAR */
+      #sideMenu {
+          position: fixed;
+          top:0;
+          left:-260px;
+          width:260px;
+          height:100vh;
+          background:#0A3D62;
+          color:white;
+          padding:20px;
+          transition:left .3s ease-in-out;
+          z-index:3000;
+      }
+
+      #sideMenu a {
+          display:block;
+          padding:10px;
+          border-radius:6px;
+          color:white !important;
+          text-decoration:none;
+          margin-bottom:6px;
+      }
+
+      #sideMenu a:hover {
+          background:#07456F;
+      }
+
+      #closeMenu {
+          font-size:26px;
+          cursor:pointer;
+          margin-bottom:15px;
+      }
+
+      /* POPUP USUARIO */
+      #userPopup {
+          position:absolute;
+          right:0;
+          top:35px;
+          width:230px;
+          background:white !important;
+          color:black !important;
+          border-radius:12px;
+          padding:18px 20px;
+          border:1px solid #dcdcdc !important;
+          box-shadow:0 4px 15px rgba(0,0,0,0.25);
+          display:none;
+          opacity:0;
+          transform:translateY(-10px);
+          transition:opacity 0.25s ease, transform 0.25s ease;
+          z-index:5000;
+          text-align:center;   /* 📌 Nombre centrado igual que los otros */
+      }
+
+      #userPopup p {
+          width:100%;
+          text-align:center;
+      }
+
+      #userPopup a {
+          display:block;
+          margin-top:10px;
+          font-weight:600;
+          color:rgb(0,0,160) !important;
+          text-align:center;
+      }
+
+
+	  #userPopup hr {
+	      margin: 6px 0;     /* línea más cerca del botón */
+	  }
+
+	  #userPopup .logout-btn {
+	      margin-top: 6px;   /* misma separación que arriba: simétrico */
+	      display: block;
+	      width: 100%;       /* para que no se mueva jamás */
+	  }
+
+	  
+      #userPopup .logout-btn {
+          background:#ff4d4d;
+          color:white !important;
+          padding:10px 0;
+          border-radius:8px;
+          display:block;
+          margin-top:12px;
+          text-align:center;
+      }
+
+      .fade-in {
+          opacity:1 !important;
+          transform:translateY(0) !important;
+      }
+
+      .fade-out {
+          opacity:0 !important;
+          transform:translateY(-10px) !important;
+      }
+
+      /* CONTENIDO */
+      .content {
+          padding:40px;
+      }
+
+      .card {
+          border-radius:12px;
+          padding:20px;
+          box-shadow:0 4px 15px rgba(0,0,0,0.08);
+          background:white;
+      }
+
+      /* ALERTAS */
+      .alert-flotante {
+          position:fixed;
+          top:20px;
+          left:50%;
+          transform:translateX(-50%);
+          z-index:9999;
+          min-width:350px;
+          padding:12px 18px;
+          border-radius:10px;
+          box-shadow:0 4px 12px rgba(0,0,0,0.2);
+      }
+
+      /* Buscar */
+      .search-container {
+          display:flex;
+          gap:10px;
+      }
+
+      .search-container input {
+          flex:1;
+          border-radius:8px;
+          border:1px solid #ced4da;
+          padding:8px 10px;
+      }
+	  .nav-icon-link {
+	      font-size:25px;
+	      color:white !important;
+	      display:inline-flex;
+	      align-items:center;
+	      justify-content:center;
+	      cursor:pointer;
+	  }
+
+  </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+
+    <span style="font-size:26px; cursor:pointer; color:white;"
+          onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+
+		<!-- 🛒 CARRITO -->
+		<a th:href="@{/carrito}" class="nav-icon-link">
+		    <i class="bi bi-cart3"></i>
+		</a>
+
+		<!-- 👤 USUARIO -->
+		<div sec:authorize="isAuthenticated()" class="position-relative">
+		    <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+		        <i class="bi bi-person-circle"></i>
+		    </span>
+
+		    <div id="userPopup">
+		        <p style="margin:0; font-size:18px; font-weight:700;">
+		            Hola <span sec:authentication="principal.nombre"></span>!
+		        </p>
+
+		        <a th:href="@{/perfil}">Ver perfil</a>
+		        <a th:href="@{/mis-pedidos}">Mis compras</a>
+		        <hr>
+		        <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+		    </div>
+		</div>
+ 
+		
+    </div>
+</nav>
+
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+
+    <a href="/dashboard">Pagina Principal</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+	<a href="/usuarios">Usuarios</a>
+	<a href="/estadisticas">Estadisticas</a> 
+</div>
+
+
+<!-- CONTENIDO -->
+<div class="container content">
+
+    <!-- ALERTAS -->
+    <div th:if="${successMessage}" class="alert alert-success text-center alert-flotante">
+        <span th:text="${successMessage}"></span>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger text-center alert-flotante">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Lista de Categorías</h2>
+        <a href="/categorias/new" class="btn btn-success">+ Agregar Categoría</a>
+    </div>
+
+    <div class="search-container mb-3">
+        <input type="text" id="searchInput" placeholder="Buscar categoría por nombre...">
+    </div>
+
+    <div class="card">
+        <table class="table table-hover align-middle" id="categoriesTable">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${categorias}">
+                <td th:text="${c.id}"></td>
+                <td th:text="${c.nombre}"></td>
+                <td class="text-center">
+                    <a th:href="@{'/categorias/edit/' + ${c.id}}" class="btn btn-warning btn-sm">Editar</a>
+                    <a th:href="@{'/categorias/delete/' + ${c.id}}"
+                       onclick="return confirm('¿Eliminar esta categoría?');"
+                       class="btn btn-danger btn-sm">
+                        Eliminar
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+/* SIDEMENU */
+function openMenu() { document.getElementById("sideMenu").style.left = "0"; }
+function closeMenu() { document.getElementById("sideMenu").style.left = "-260px"; }
+
+document.addEventListener("click", function(e) {
+    const menu = document.getElementById("sideMenu");
+    if (menu.style.left !== "0px") return;
+
+    if (!menu.contains(e.target) && e.target.getAttribute("onclick") !== "openMenu()") {
+        closeMenu();
+    }
+});
+
+
+/* POPUP USUARIO */
+const userIcon = document.getElementById("userIcon");
+const popup = document.getElementById("userPopup");
+
+function showPopup() {
+    popup.style.display = "block";
+    requestAnimationFrame(() => popup.classList.add("fade-in"));
+}
+
+function hidePopup() {
+    popup.classList.remove("fade-in");
+    popup.classList.add("fade-out");
+    setTimeout(() => {
+        popup.style.display = "none";
+        popup.classList.remove("fade-out");
+    }, 250);
+}
+
+userIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    popup.style.display === "block" ? hidePopup() : showPopup();
+});
+
+document.addEventListener("click", (e) => {
+    if (!popup.contains(e.target) && !userIcon.contains(e.target) && popup.style.display === "block") {
+        hidePopup();
+    }
+});
+
+
+/* BUSCADOR */
+document.getElementById('searchInput').addEventListener('input', function () {
+    const filter = this.value.toLowerCase();
+    document
+        .querySelectorAll('#categoriesTable tbody tr')
+        .forEach(row => {
+            const name = row.children[1].textContent.toLowerCase();
+            row.style.display = name.startsWith(filter) ? "" : "none";
+        });
+});
+
+
+/* ALERTAS DESVANECER */
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.alert-flotante').forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = "0";
+            alert.style.transition = "opacity .5s";
+            setTimeout(() => alert.remove(), 500);
+        }, 3500);
+    });
+});
+</script>
+
+</body>
+</html>

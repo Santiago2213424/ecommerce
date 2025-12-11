@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Tienda | Smart Store</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+      body {
+          background: #f4f6f9;
+          font-family: 'Poppins', sans-serif;
+      }
+
+      /* NAVBAR (MISMO ESTILO GLOBAL) */
+      .navbar {
+          background: #0A3D62;
+          padding: 14px 30px !important; 
+      }
+      .navbar a {
+          color: white !important;
+          font-weight: 600;
+          text-decoration: none !important;
+		  font-size:16px; 
+      }
+
+      /* POPUP USUARIO (TEXTO NEGRO) */
+      #userPopup {
+          display: none;
+          position: absolute;
+          right: 0;
+          top: 35px;
+          background: white !important;
+          color: black !important;
+          padding: 18px 20px;
+          border-radius: 12px;
+          border: 1px solid #dcdcdc !important;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+          width: 230px;
+          text-align: center;
+          z-index: 5000;
+      }
+      #userPopup p,
+      #userPopup span,
+      #userPopup a {
+          color: black !important;
+      }
+      #userPopup a.logout-btn {
+          background:#ff4d4d;
+          color:white !important;
+          font-weight:bold;
+          padding:10px 0;
+          border-radius:8px;
+          display:block;
+          text-decoration:none;
+          transition:0.25s;
+      }
+
+      /* MENU LATERAL */
+      #sideMenu {
+          position: fixed;
+          top: 0;
+          left: -260px;
+          width: 260px;
+          height: 100vh;
+          background: #0A3D62;
+          color: white;
+          padding: 20px;
+          transition: left .3s ease-in-out;
+          z-index: 2500;
+      }
+      #sideMenu a {
+          color: white !important;
+          text-decoration: none;
+          display: block;
+          padding: 10px 5px;
+          font-size: 17px;
+      }
+      #sideMenu a:hover {
+          background: #07456F;
+          border-radius: 5px;
+      }
+      #closeMenu {
+          font-size: 25px;
+          font-weight: bold;
+          cursor: pointer;
+          margin-bottom: 20px;
+      }
+      #subCategorias {
+          display: none;
+          padding-left: 15px;
+          margin-top: 10px;
+      }
+
+      /* PRODUCTOS */
+      .product-card {
+          background: #fff;
+          border-radius: 15px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          transition: .3s;
+          cursor: pointer;
+      }
+      .product-card:hover { transform: scale(1.03); }
+      .product-img {
+          height: 250px;
+          width: 100%;
+          object-fit: cover;
+      }
+      .info-box {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 15px;
+      }
+      .info-right {
+          background: #FF4F70;
+          color: white;
+          padding: 15px;
+          font-weight: bold;
+          min-width: 90px;
+          border-top-left-radius: 12px;
+      }
+
+      footer {
+          background: #0A3D62;
+          color: white;
+          padding: 50px 0;
+      }
+
+      /* ALERTAS */
+      .alert-flotante {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 9999;
+          min-width: 350px;
+          max-width: 600px;
+          padding: 14px 20px;
+          border-radius: 10px;
+          font-size: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          animation: fadeIn 0.3s ease-out;
+      }
+	  
+	  /* Animación suave al ocultar */
+	  .fade-out {
+	      opacity: 0;
+	      transform: translateY(-10px);
+	      transition: opacity 0.25s ease, transform 0.25s ease;
+	  }
+
+	  .fade-in {
+	      opacity: 1;
+	      transform: translateY(0);
+	      transition: opacity 0.25s ease, transform 0.25s ease;
+	  }
+	  
+	  .nav-icon-link {
+	      font-size:25px;
+	      color:white !important;
+	      display:inline-flex;
+	      align-items:center;
+	      justify-content:center;
+	      cursor:pointer;
+	      text-decoration:none !important;
+	  }
+
+
+  </style>
+</head>
+<body>
+	
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <span style="font-size:28px; cursor:pointer; color:white;" onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/" style="font-size:20px; font-weight:600; text-decoration:none !important;">
+        Smart Store
+    </a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+
+        <!-- 🛒 CARRITO -->
+		<a th:href="@{/carrito-usuario}" style="font-size:25px" sec:authorize="isAuthenticated()" class="nav-icon-link" >
+		    <i class="bi bi-cart3"></i>
+		</a>
+		
+
+        <!-- 👤 USUARIO -->
+        <div sec:authorize="isAuthenticated()" class="position-relative">
+			<span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+			    <i class="bi bi-person-circle"></i>
+			</span>
+
+            <!-- POPUP -->
+            <div id="userPopup">
+                <p style="margin:0; font-size:18px; font-weight:700;">
+                    Hola 
+                    <span style="text-transform:capitalize;"
+                          sec:authentication="principal.nombre"></span>!!
+                </p>
+
+				<a th:href="@{/perfil}"
+					style="font-weight:600; font-size:15px; margin-top:10px; display:block; color:rgb(0, 0, 160) !important;">
+					Ver mi Perfil
+				</a>
+				
+                <a th:href="@{/mis-pedidos}"
+                   style="font-weight:600; font-size:15px; margin-top:10px; display:block; color:rgb(0, 0, 160) !important;">
+                    Mis compras
+                </a>
+				
+				
+                <hr style="margin:12px 0;">
+
+                <a th:href="@{/logout}" class="logout-btn">
+                    Cerrar sesión
+                </a>
+            </div>
+        </div>
+
+        <!-- LOGIN -->
+        <a th:href="@{/login}" class="btn btn-outline-light"
+           style="font-weight:600; font-size:15px; text-decoration:none !important;"
+           sec:authorize="!isAuthenticated()">Iniciar sesión</a>
+
+    </div>
+</nav>
+
+
+<!-- ALERTAS -->
+<div th:if="${successMessage}" class="alert alert-success text-center fw-bold alert-flotante">
+    <span th:text="${successMessage}"></span>
+</div>
+
+<div th:if="${errorMessage}" class="alert alert-danger text-center fw-bold alert-flotante">
+    <span th:text="${errorMessage}"></span>
+</div>
+
+<!-- MENU LATERAL -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+    <a href="#" onclick="toggleCategorias()">Categorías ⯆</a>
+
+    <div id="subCategorias">
+        <a href="#" onclick="filtrarCategoria('all')">Todas</a>
+
+        <a th:each="c : ${categorias}"
+           th:text="${c.nombre}"
+           th:data-cat="${c.nombre}"
+           onclick="filtrarCategoria(this.getAttribute('data-cat'))"></a>
+    </div>
+</div>
+
+<!-- CAROUSEL -->
+<div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active"><img src="/img/banner1.jpg" class="d-block w-100" height="420"></div>
+    <div class="carousel-item"><img src="/img/banner2.jpg" class="d-block w-100" height="420"></div>
+    <div class="carousel-item"><img src="/img/banner3.jpg" class="d-block w-100" height="420"></div>
+  </div>
+</div>
+
+<!-- PRODUCTOS -->
+<div class="container mt-5">
+    <h2 class="fw-bold text-center mb-4">Todos los productos</h2>
+
+    <div class="row g-4" id="productsContainer">
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 product-item"
+             th:each="p : ${productos}"
+             th:data-cat="${p.categoria.nombre}">
+
+            <a th:href="@{'/listaproductos/' + ${p.id}}"
+               style="text-decoration:none; color:inherit;">
+
+                <div class="product-card">
+                    <img th:src="@{'/uploads/' + ${p.imagen}}" class="product-img">
+                    <div class="info-box">
+                        <div>
+                            <b th:text="${p.nombre}"></b><br>
+                            <span th:text="${p.categoria.nombre}"></span>
+                        </div>
+                        <div class="info-right">
+                            <span th:text="'S/ ' + ${p.precio}"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- DESTACADOS -->
+<div class="container mt-5">
+    <h2 class="fw-bold text-center mb-4">Productos Destacados</h2>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6"
+             th:each="p, iter : ${productos}"
+             th:if="${iter.index < 2}">
+             
+            <a th:href="@{'/listaproductos/' + ${p.id}}"
+               style="text-decoration:none; color:inherit;">
+
+                <div class="product-card">
+                    <img th:src="@{'/uploads/' + ${p.imagen}}" class="product-img" style="height:330px;">
+                    <div class="info-box">
+                        <div>
+                            <b th:text="${p.nombre}"></b><br>
+                            <span th:text="${p.categoria != null ? p.categoria.nombre : 'Sin categoría'}"></span>
+                        </div>
+                        <div class="info-right">
+                            <span th:text="'S/ ' + ${p.precio}"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </a>
+
+        </div>
+    </div>
+
+    <div class="row g-4 mt-4">
+
+        <div class="col-12"
+             th:each="p, iter : ${productos}"
+             th:if="${iter.index == 2}">
+             
+            <a th:href="@{'/listaproductos/' + ${p.id}}"
+               style="text-decoration:none; color:inherit;">
+
+                <div class="product-card d-flex" style="height: 260px;">
+
+                    <img th:src="@{'/uploads/' + ${p.imagen}}" style="width:45%; object-fit:cover;">
+
+                    <div class="info-box" style="width:55%; display:flex; justify-content:space-between; align-items:center;">
+
+                        <div style="font-size:18px;">
+                            <b th:text="${p.nombre}"></b><br>
+                            <span th:text="${p.categoria != null ? p.categoria.nombre : 'Sin categoría'}"></span>
+                        </div>
+
+                        <div class="info-right" style="font-size:20px;">
+                            <span th:text="'S/ ' + ${p.precio}"></span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="mt-5">
+  <div class="container mt-4">
+      <div class="row text-start footer-links">
+          <div class="col-md-3"><h5>Te ayudamos</h5><a href="#">Libro de reclamaciones</a><a href="#">Centro de ayuda</a></div>
+          <div class="col-md-3"><h5>Servicios</h5><a href="#">Venta empresa</a></div>
+          <div class="col-md-3"><h5>Nosotros</h5><a href="#">Políticas de privacidad</a></div>
+          <div class="col-md-3"><h5>Nuestras redes</h5><a href="#">Instagram</a><a href="#">TikTok</a><a href="#">Facebook</a></div>
+      </div>
+  </div>
+
+  <div class="text-center mt-4 pt-3 border-top">
+      © 2025 Smart Store | Trujillo - Perú
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+    function openMenu() { document.getElementById("sideMenu").style.left = "0"; }
+    function closeMenu() { document.getElementById("sideMenu").style.left = "-260px"; }
+
+    function toggleCategorias() {
+        let sub = document.getElementById("subCategorias");
+        sub.style.display = sub.style.display === "block" ? "none" : "block";
+    }
+
+    function filtrarCategoria(categoria) {
+        document.querySelectorAll('.product-item').forEach(item => {
+            const cat = item.getAttribute('data-cat');
+            item.style.display = (categoria === "all" || cat === categoria) ? "block" : "none";
+        });
+    }
+
+    /* POPUP USUARIO */
+	const userIcon = document.getElementById("userIcon");
+	const popup = document.getElementById("userPopup");
+
+	if (userIcon) {
+
+	    userIcon.addEventListener("click", () => {
+	        if (popup.style.display === "block") {
+	            // 🔥 Ocultar con animación
+	            popup.classList.remove("fade-in");
+	            popup.classList.add("fade-out");
+
+	            setTimeout(() => {
+	                popup.style.display = "none";
+	            }, 250); // coincide con la animación
+	        } else {
+	            // 🔥 Mostrar con animación
+	            popup.style.display = "block";
+	            popup.classList.remove("fade-out");
+	            popup.classList.add("fade-in");
+	        }
+	    });
+
+	    // Cerrar si se hace click fuera
+	    document.addEventListener("click", (e) => {
+	        if (!userIcon.contains(e.target) && !popup.contains(e.target)) {
+	            if (popup.style.display === "block") {
+	                popup.classList.remove("fade-in");
+	                popup.classList.add("fade-out");
+
+	                setTimeout(() => {
+	                    popup.style.display = "none";
+	                }, 250);
+	            }
+	        }
+	    });
+	}
+
+
+    /* AUTO OCULTAR ALERTAS */
+    document.addEventListener("DOMContentLoaded", () => {
+        const alerts = document.querySelectorAll(".alert-flotante");
+
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 600);
+            }, 3000);
+        });
+    });
+	
+	document.addEventListener("click", function(e) {
+
+	       const menu = document.getElementById("sideMenu");
+	       const isMenuOpen = menu.style.left === "0px";
+
+	       if (!isMenuOpen) return;
+
+	       const isClickInside =
+	           menu.contains(e.target) ||
+	           e.target.getAttribute("onclick") === "openMenu()";
+
+	       if (!isClickInside) {
+	           closeMenu();
+	       }
+	   });
+
+</script>
+
+</body>
+</html>

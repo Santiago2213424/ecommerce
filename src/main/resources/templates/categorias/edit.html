@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Categoría | Smart Store Admin</title>
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+      body {
+          background:#f4f6f9;
+          font-family:'Poppins', sans-serif;
+      }
+
+      /* NAVBAR */
+      .navbar {
+          background:#0A3D62;
+          padding:14px 30px !important;
+      }
+
+      .navbar a {
+          color:white !important;
+          font-weight:600;
+          font-size:18px;
+          text-decoration:none !important;
+      }
+
+      /* SIDEBAR */
+      #sideMenu {
+          position: fixed;
+          top:0;
+          left:-260px;
+          width:260px;
+          height:100vh;
+          background:#0A3D62;
+          color:white;
+          padding:20px;
+          transition:left .3s ease-in-out;
+          z-index:3000;
+      }
+
+      #sideMenu a {
+          display:block;
+          padding:10px;
+          border-radius:6px;
+          color:white !important;
+          text-decoration:none;
+          margin-bottom:6px;
+      }
+
+      #sideMenu a:hover { background:#07456F; }
+
+      #closeMenu {
+          font-size:26px;
+          cursor:pointer;
+          margin-bottom:15px;
+      }
+
+      /* POPUP USUARIO */
+      #userPopup {
+          position:absolute;
+          right:0;
+          top:35px;
+          width:230px;
+          background:white !important;
+          color:black !important;
+          border-radius:12px;
+          padding:18px 20px;
+          border:1px solid #dcdcdc !important;
+          box-shadow:0 4px 15px rgba(0,0,0,0.25);
+          display:none;
+          opacity:0;
+          transform:translateY(-10px);
+          transition:opacity 0.25s ease, transform 0.25s ease;
+          z-index:5000;
+          text-align:center;
+      }
+
+      .fade-in { opacity:1 !important; transform:translateY(0) !important; }
+      .fade-out { opacity:0 !important; transform:translateY(-10px) !important; }
+
+      #userPopup a {
+          display:block;
+          margin-top:10px;
+          font-weight:600;
+          color:rgb(0,0,160) !important;
+      }
+	  
+	  #userPopup hr {
+	      margin: 6px 0;    
+	  }
+
+	  #userPopup .logout-btn {
+	      margin-top: 6px; 
+	      display: block;
+	      width: 100%;      
+	  }
+
+
+      #userPopup .logout-btn {
+          background:#ff4d4d;
+          color:white !important;
+          padding:10px 0;
+          border-radius:8px;
+          margin-top:12px;
+          display:block;
+      }
+
+      /* CONTENIDO */
+      .content {
+          padding:40px;
+          display:flex;
+          justify-content:center;
+      }
+
+	  .page-center {
+	      min-height: calc(100vh - 80px); 
+	      display: flex;
+	      justify-content: center;
+	      align-items: flex-start; 
+	      margin-top: 5px;       
+	  }
+
+
+      .form-container {
+          width:100%;
+          max-width:500px;
+          background:white;
+          padding:30px;
+          border-radius:12px;
+          box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      }
+
+      h1 {
+          text-align:center;
+          font-weight:700;
+          margin-bottom:20px;
+      }
+	  .nav-icon-link {
+	      font-size:25px;
+	      color:white !important;
+	      display:inline-flex;
+	      align-items:center;
+	      justify-content:center;
+	      cursor:pointer;
+	  }
+
+  </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+
+    <span style="font-size:26px; cursor:pointer; color:white;"
+          onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+		<!-- 🛒 CARRITO -->
+		<a th:href="@{/carrito}" class="nav-icon-link">
+		    <i class="bi bi-cart3"></i>
+		</a>
+
+		<!-- 👤 USUARIO -->
+		<div sec:authorize="isAuthenticated()" class="position-relative">
+		    <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+		        <i class="bi bi-person-circle"></i>
+		    </span>
+
+		    <div id="userPopup">
+		        <p style="margin:0; font-size:18px; font-weight:700;">
+		            Hola <span sec:authentication="principal.nombre"></span>!
+		        </p>
+
+		        <a th:href="@{/perfil}">Ver perfil</a>
+		        <a th:href="@{/mis-pedidos}">Mis compras</a>
+		        <hr>
+		        <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+		    </div>
+		</div>
+
+		
+    </div>
+</nav>
+
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+
+    <a href="/dashboard">Pagina Principal</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+	<a href="/usuarios">Usuarios</a> 
+	<a href="/estadisticas">Estadisticas</a>
+</div>
+
+
+<!-- CONTENIDO -->
+<div class="content">
+  <div class="container page-center">
+
+    <div class="form-container">
+        <h1>Editar Categoría</h1>
+
+        <!-- Mensajes -->
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+        <form action="/categorias/update" method="post">
+            <input type="hidden" name="id" th:value="${categoria.id}">
+
+            <div class="mb-3">
+                <label class="form-label">Nombre:</label>
+                <input type="text" name="nombre" class="form-control"
+                       th:value="${categoria.nombre}" maxlength="50" required>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <a href="/categorias" class="btn btn-secondary w-50">Cancelar</a>
+                <button type="submit" class="btn btn-primary w-50">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* SIDEMENU */
+function openMenu() { document.getElementById("sideMenu").style.left = "0"; }
+function closeMenu() { document.getElementById("sideMenu").style.left = "-260px"; }
+
+document.addEventListener("click", function(e) {
+    const menu = document.getElementById("sideMenu");
+    if (menu.style.left !== "0px") return;
+
+    if (!menu.contains(e.target) && e.target.getAttribute("onclick") !== "openMenu()") {
+        closeMenu();
+    }
+});
+
+/* POPUP USUARIO */
+const userIcon = document.getElementById("userIcon");
+const popup = document.getElementById("userPopup");
+
+function showPopup() { popup.style.display = "block"; requestAnimationFrame(()=>popup.classList.add("fade-in")); }
+function hidePopup() {
+    popup.classList.remove("fade-in");
+    popup.classList.add("fade-out");
+    setTimeout(()=>{ popup.style.display="none"; popup.classList.remove("fade-out"); },250);
+}
+
+userIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    popup.style.display === "block" ? hidePopup() : showPopup();
+});
+
+document.addEventListener("click", (e) => {
+    if (!popup.contains(e.target) && !userIcon.contains(e.target) && popup.style.display === "block") {
+        hidePopup();
+    }
+});
+</script>
+
+</body>
+</html>

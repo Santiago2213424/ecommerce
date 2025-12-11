@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reporte de Ventas | Smart Store Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+  <style>
+      body {
+          background:#f4f6f9;
+          font-family:'Poppins', sans-serif;
+          margin:0;
+      }
+
+      /* NAVBAR */
+      .navbar {
+          background:#0A3D62;
+          padding:14px 30px !important;
+      }
+      .navbar a {
+          color:white !important;
+          font-weight:600;
+          font-size:18px;
+          text-decoration:none !important;
+      }
+
+      /* SIDEBAR */
+      #sideMenu {
+          position: fixed;
+          top:0;
+          left:-260px;
+          width:260px;
+          height:100vh;
+          background:#0A3D62;
+          color:white;
+          padding:20px;
+          transition:left .3s;
+          z-index:3000;
+      }
+      #sideMenu a { display:block; padding:10px; border-radius:6px; color:white !important; margin-bottom:6px; }
+      #sideMenu a:hover { background:#07456F; }
+      #closeMenu { font-size:26px; cursor:pointer; margin-bottom:15px; }
+
+      /* POPUP */
+      #userPopup {
+          position:absolute;
+          right:0;
+          top:35px;
+          width:230px;
+          background:white;
+          border-radius:12px;
+          padding:18px 20px;
+          border:1px solid #dcdcdc;
+          box-shadow:0 4px 15px rgba(0,0,0,0.25);
+          display:none;
+          opacity:0;
+          transform:translateY(-10px);
+          transition:.25s;
+          text-align:center;
+          z-index:5000;
+      }
+      .fade-in { opacity:1 !important; transform:translateY(0) !important; }
+      .fade-out { opacity:0 !important; transform:translateY(-10px) !important; }
+
+      #userPopup a { display:block; font-weight:600; color:rgb(0,0,160) !important; margin-top:10px; }
+      #userPopup .logout-btn {
+          background:#ff4d4d;
+          color:white !important;
+          padding:10px 0;
+          border-radius:8px;
+          display:block;
+          margin-top:12px;
+      }
+	  
+	  #userPopup hr {
+	      margin: 6px 0;     
+	  }
+
+	  #userPopup .logout-btn {
+	      margin-top: 14px;   
+	      display: block;
+	      width: 100%;    
+	  }
+	  
+	  
+
+      /* CONTENIDO */
+      .content { padding:40px; display:flex; justify-content:center; }
+      .content-wrap { width:100%; max-width:1200px; }
+
+      /* TABLA ESTÁTICA */
+      .table-container {
+          max-height: 500px;  /* altura fija */
+          overflow-y: auto;
+          border-radius: 12px;
+          box-shadow:0 4px 12px rgba(0,0,0,0.08);
+          background:white;
+      }
+
+      table thead th {
+          position: sticky;
+          top: 0;
+          background:#212529 !important;
+          color:white;
+          z-index: 10;
+      }
+
+      /* FILTROS */
+      .filters-container {
+          display:flex;
+          flex-wrap:wrap;
+          gap:10px;
+          justify-content:space-between;
+      }
+
+      .filters-left {
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+      }
+
+     
+	  .export-buttons button {
+	      font-size: 20px;
+	      font-weight: 600;
+	      border-radius: 8px;
+	  }
+	  
+	  table thead th {
+	      position: sticky;
+	      top: 0;
+	      background: #0A3D62 !important;
+	      color: white !important;
+	      z-index: 10;
+	  }
+
+	  .menu-icon {
+	      text-decoration: none !important;
+	      outline: none !important;
+	  }
+	  .menu-icon,
+	  .menu-icon:focus,
+	  .menu-icon:active,
+	  .menu-icon:hover {
+	      text-decoration: none !important;
+	      outline: none !important;
+	      border: none !important;
+	      box-shadow: none !important;
+	  }
+	  
+	  /* ELIMINA SUBRAYADO EN TODA LA BARRA LATERAL */
+	  #sideMenu a,
+	  #sideMenu a:focus,
+	  #sideMenu a:active,
+	  #sideMenu a:hover {
+	      text-decoration: none !important;
+	      outline: none !important;
+	      border: none !important;
+	      box-shadow: none !important;
+	  }
+	  
+	  .nav-icon-link {
+	      font-size:25px;
+	      color:white !important;
+	      display:inline-flex;
+	      align-items:center;
+	      justify-content:center;
+	      cursor:pointer;
+	  }
+
+
+  </style>
+  
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+	<span class="menu-icon"
+	      style="font-size:26px; cursor:pointer; color:white;"
+	      onclick="openMenu()">&#9776;</span>
+
+
+		  
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+
+		<!-- 🛒 CARRITO -->
+		<a th:href="@{/carrito}" class="nav-icon-link">
+		    <i class="bi bi-cart3"></i>
+		</a>
+
+		<!-- 👤 USUARIO -->
+		<div sec:authorize="isAuthenticated()" class="position-relative">
+		    <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+		        <i class="bi bi-person-circle"></i>
+		    </span>
+
+		    <div id="userPopup">
+		        <p style="margin:0; font-size:18px; font-weight:700;">
+		            Hola <span sec:authentication="principal.nombre"></span>!
+		        </p>
+
+		        <a th:href="@{/perfil}">Ver perfil</a>
+		        <a th:href="@{/mis-pedidos}">Mis compras</a>
+		        <hr>
+		        <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+		    </div>
+		</div>
+
+		
+    </div>
+</nav>
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+    <a href="/dashboard">Pagina Principal</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+	<a href="/usuarios">Usuarios</a> 
+	<a href="/estadisticas">Estadisticas</a>
+</div>
+
+
+<!-- CONTENIDO -->
+<div class="content">
+<div class="content-wrap">
+
+    <h2 class="fw-bold mb-4 text-center">Reporte de Ventas</h2>
+
+    <!-- ⭐ FILTROS -->
+    <div class="filters-container">
+
+        <div class="filters-left">
+
+            <!-- DNI -->
+            <input type="text" id="dniFilter" placeholder="Filtrar por DNI" class="form-control" style="width:160px;">
+
+            <!-- Fecha desde -->
+            <input type="date" id="fechaDesde" class="form-control">
+
+            <!-- Fecha hasta -->
+            <input type="date" id="fechaHasta" class="form-control">
+
+        </div>
+
+        <!-- EXPORTAR -->
+        <div class="export-buttons">
+			<button id="exportPdfBtn" class="btn btn-danger btn-sm px-3">PDF</button>
+			<button id="exportExcelBtn" class="btn btn-success btn-sm px-3">Excel</button>
+        </div>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-container mt-3">
+        <table class="table table-striped table-bordered text-center" id="ventasTable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>DNI</th>
+                <th>Modalidad</th>
+                <th>Dirección</th>
+                <th>Referencia</th>
+                <th>N° Celular</th>
+                <th>Productos</th>
+                <th>Estado</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="v : ${ventas}">
+                <td th:text="${v.id}"></td>
+                <td th:text="${#temporals.format(v.fecha, 'yyyy-MM-dd')}"></td>
+                <td th:text="'S/ ' + ${v.total}"></td>
+                <td th:text="${v.dni}"></td>
+                <td th:text="${v.modalidadEntrega}"></td>
+                <td th:text="${v.direccionEntrega}"></td>
+                <td th:text="${v.referencia}"></td>
+                <td th:text="${v.numero}"></td>
+
+                <td class="text-start">
+                    <ul>
+                        <li th:each="det : ${v.detalles}"
+                            th:text="${det.producto.nombre + ' - Cant: ' + det.cantidad}"></li>
+                    </ul>
+                </td>
+
+                <td>
+                    <form th:action="@{'/ventas/estado/' + ${v.id}}" method="post">
+                        <select name="estado" class="form-select" onchange="this.form.submit()">
+                            <option th:each="e : ${T(ecomer.pe.model.EstadoVenta).values()}"
+                                    th:value="${e}"
+                                    th:text="${e}"
+                                    th:selected="${e == v.estado}">
+                            </option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// =========================================================
+//  📂 SIDEBAR (☰)
+// =========================================================
+function openMenu() {
+    const menu = document.getElementById("sideMenu");
+    if (menu) {
+        menu.style.left = "0";
+    }
+}
+function closeMenu() {
+    const menu = document.getElementById("sideMenu");
+    if (menu) {
+        menu.style.left = "-260px";
+    }
+}
+
+// Esperar a que el DOM esté cargado para el resto
+document.addEventListener("DOMContentLoaded", () => {
+
+    const sideMenu = document.getElementById("sideMenu");
+
+    // Cerrar menú al hacer click fuera
+    document.addEventListener("click", (e) => {
+        if (!sideMenu) return;
+
+        const isOpen = sideMenu.style.left === "0px";
+        if (!isOpen) return;
+
+        const clickedInsideMenu = sideMenu.contains(e.target);
+        const clickedOpenButton = e.target.getAttribute("onclick") === "openMenu()";
+
+        if (!clickedInsideMenu && !clickedOpenButton) {
+            closeMenu();
+        }
+    });
+
+    // =========================================================
+    //  🧑‍💼 POPUP USUARIO (Animación suave)
+    // =========================================================
+    const userIcon = document.getElementById("userIcon");
+    const popup    = document.getElementById("userPopup");
+
+    if (userIcon && popup) {
+
+        function showPopup() {
+            popup.style.display = "block";
+            requestAnimationFrame(() => popup.classList.add("fade-in"));
+        }
+
+        function hidePopup() {
+            popup.classList.remove("fade-in");
+            popup.classList.add("fade-out");
+            setTimeout(() => {
+                popup.style.display = "none";
+                popup.classList.remove("fade-out");
+            }, 250);
+        }
+
+        userIcon.addEventListener("click", (e) => {
+            e.stopPropagation();
+            popup.style.display === "block" ? hidePopup() : showPopup();
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!popup.contains(e.target) && e.target !== userIcon) {
+                hidePopup();
+            }
+        });
+    }
+
+    // =========================================================
+    //  🔍 FILTROS: DNI + Fecha Desde + Fecha Hasta
+    // =========================================================
+    const dniInput   = document.getElementById("dniFilter");
+    const desdeInput = document.getElementById("fechaDesde");
+    const hastaInput = document.getElementById("fechaHasta");
+
+    function filtrarTabla() {
+        if (!dniInput || !desdeInput || !hastaInput) return;
+
+        const dni   = dniInput.value.trim().toLowerCase();
+        const desde = desdeInput.value;
+        const hasta = hastaInput.value;
+
+        document.querySelectorAll("#ventasTable tbody tr").forEach(row => {
+            const rowDni   = row.children[3].textContent.toLowerCase();
+            const rowFecha = row.children[1].textContent; // yyyy-MM-dd
+
+            let visible = true;
+
+            // Filtro DNI
+            if (dni && !rowDni.includes(dni)) visible = false;
+
+            // Filtro fecha desde
+            if (desde && rowFecha < desde) visible = false;
+
+            // Filtro fecha hasta
+            if (hasta && rowFecha > hasta) visible = false;
+
+            row.style.display = visible ? "" : "none";
+        });
+    }
+
+    if (dniInput)   dniInput.addEventListener("input",  filtrarTabla);
+    if (desdeInput) desdeInput.addEventListener("change", filtrarTabla);
+    if (hastaInput) hastaInput.addEventListener("change", filtrarTabla);
+
+    // =========================================================
+    //  📄 EXPORTAR PDF / EXCEL con filtros
+    // =========================================================
+    const pdfBtn   = document.getElementById("exportPdfBtn");
+    const excelBtn = document.getElementById("exportExcelBtn");
+
+    function exportar(tipo) {
+        if (!dniInput || !desdeInput || !hastaInput) return;
+
+        const dni   = dniInput.value;
+        const desde = desdeInput.value;
+        const hasta = hastaInput.value;
+
+        window.location.href =
+            `/ventas/export/${tipo}?dni=${dni}&desde=${desde}&hasta=${hasta}`;
+    }
+
+    if (pdfBtn)   pdfBtn.addEventListener("click", () => exportar("pdf"));
+    if (excelBtn) excelBtn.addEventListener("click", () => exportar("excel"));
+
+});
+</script>
+
+
+</body>
+</html>

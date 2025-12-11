@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Compra | Smart Store Admin</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+		  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">	  
+
+    <style>
+        body {
+            background:#f4f6f9;
+            font-family:'Poppins', sans-serif;
+            margin:0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background:#0A3D62;
+            padding:14px 30px !important;
+        }
+        .navbar a {
+            color:white !important;
+            font-weight:600;
+            text-decoration:none !important;
+            font-size:18px;
+        }
+
+        /* SIDEBAR */
+        #sideMenu {
+            position: fixed;
+            top:0;
+            left:-260px;
+            width:260px;
+            height:100vh;
+            background:#0A3D62;
+            color:white;
+            padding:20px;
+            transition:left .3s ease-in-out;
+            z-index:3000;
+        }
+        #sideMenu a {
+            display:block;
+            padding:10px;
+            border-radius:6px;
+            color:white !important;
+            margin-bottom:6px;
+            text-decoration:none;
+        }
+        #sideMenu a:hover { background:#07456F; }
+        #closeMenu {
+            font-size:26px;
+            cursor:pointer;
+            margin-bottom:15px;
+        }
+
+        /* POPUP USUARIO */
+        #userPopup {
+            position:absolute;
+            right:0;
+            top:35px;
+            width:230px;
+            padding:18px 20px;
+            background:white;
+            color:black;
+            border-radius:12px;
+            border:1px solid #dcdcdc;
+            box-shadow:0 4px 15px rgba(0,0,0,0.25);
+            display:none;
+            opacity:0;
+            transform:translateY(-10px);
+            transition:opacity .25s, transform .25s;
+            text-align:center;
+            z-index:5000;
+        }
+        .fade-in { opacity:1 !important; transform:translateY(0) !important; }
+        .fade-out { opacity:0 !important; transform:translateY(-10px) !important; }
+
+        #userPopup a {
+            display:block;
+            margin-top:10px;
+            font-weight:600;
+            color:rgb(0,0,160) !important;
+        }
+		
+		#userPopup hr {
+				    margin: 6px 0;    
+				}
+
+				#userPopup .logout-btn {
+				    margin-top: 14px;  
+				    display: block;
+				    width: 100%;       
+				}
+        #userPopup .logout-btn {
+            margin-top:12px;
+            background:#ff4d4d;
+            color:white !important;
+            padding:10px 0;
+            border-radius:8px;
+            display:block;
+            font-weight:700;
+        }
+
+        /* CONTENIDO */
+		/* CONTENIDO */
+		.content {
+		    padding:40px;
+		    width:100%;
+		    display:flex;
+		    justify-content:center;
+		}
+
+		.card-box {
+		    width:100%;
+		    max-width:900px;
+		    margin:auto; /* ESTA LÍNEA centra todo */
+		    background:white;
+		    padding:30px;
+		    border-radius:12px;
+		    box-shadow:0 4px 15px rgba(0,0,0,0.08);
+		}
+
+
+        table {
+            background:white;
+            border-radius:10px;
+            overflow:hidden;
+        }
+
+        .btn-uniform {
+            padding:10px;
+            font-weight:600;
+            border-radius:8px;
+        }
+		
+		.nav-icon-link {
+		    font-size:25px;
+			color:white !important;
+		    display:inline-flex;
+			align-items:center;
+			justify-content:center;
+			cursor:pointer;
+				}
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+
+    <span style="font-size:26px; cursor:pointer; color:white;" onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+
+        <!-- 🛒 CARRITO -->
+		<a th:href="@{/carrito}" class="nav-icon-link">
+				    <i class="bi bi-cart3"></i>
+				</a>
+
+				<!-- 👤 USUARIO -->
+				<div sec:authorize="isAuthenticated()" class="position-relative">
+				    <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+				        <i class="bi bi-person-circle"></i>
+				    </span>
+
+				    <div id="userPopup">
+				        <p style="margin:0; font-size:18px; font-weight:700;">
+				            Hola <span sec:authentication="principal.nombre"></span>!
+				        </p>
+
+				        <a th:href="@{/perfil}">Ver perfil</a>
+				        <a th:href="@{/mis-pedidos}">Mis compras</a>
+				        <hr>
+				        <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+				    </div>
+				</div>
+
+    </div>
+</nav>
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+
+    <a href="/dashboard">Dashboard</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+	<a href="/usuarios">Usuarios</a>
+	<a href="/estadisticas">Estadisticas</a> 
+</div>
+
+
+<!-- CONTENIDO -->
+<div class="content">
+  <div class="card-box">
+
+    <h1 class="fw-bold text-center mb-4">Confirmar Compra</h1>
+
+    <!-- MENSAJES -->
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+    <h4 class="fw-bold mb-3">Resumen de Compra</h4>
+
+    <!-- TABLA -->
+    <table class="table table-bordered text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+
+      <tbody th:each="item : ${carrito}">
+        <tr>
+          <td th:text="${item.producto.nombre}"></td>
+          <td th:text="${item.cantidad}"></td>
+          <td th:text="'S/ ' + ${item.subtotal}"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="text-end fw-bold mt-3">
+        Total: <span th:text="'S/ ' + ${total}"></span>
+    </h3>
+
+    <!-- FORMULARIO -->
+    <!-- FORMULARIO -->
+<form th:action="@{/carrito/pago/confirmar}" method="post" class="mt-4">
+
+    <!-- DNI -->
+    <div class="mb-3">
+        <label class="fw-bold">DNI</label>
+        <input type="text" name="dni" required maxlength="8"
+               pattern="[0-9]{8}" class="form-control" placeholder="Ingrese DNI">
+    </div>
+
+    <!-- ⭐ NUEVO: CELULAR -->
+    <div class="mb-3">
+        <label class="fw-bold">Número de Celular</label>
+        <input type="text" name="numero" required maxlength="9"
+               pattern="[0-9]{9}" class="form-control" placeholder="Ingrese número de celular">
+    </div>
+
+    <div class="mb-3">
+        <label class="fw-bold">Modalidad de Entrega</label>
+        <select id="modalidad" name="modalidad" class="form-select" required>
+            <option value="">Seleccione...</option>
+            <option value="RECOJO">Recojo en tienda</option>
+            <option value="DELIVERY">Delivery</option>
+        </select>
+    </div>
+
+    <div id="direccionBox" class="mb-3 d-none">
+        <label class="fw-bold">Dirección</label>
+        <input type="text" name="direccion" class="form-control">
+    </div>
+
+    <div id="referenciaBox" class="mb-3 d-none">
+        <label class="fw-bold">Referencia</label>
+        <input type="text" name="referencia" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="fw-bold">Método de Pago</label>
+        <select id="metodo" name="metodo" class="form-select" required>
+            <option value="">Seleccione...</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="YAPE">Yape</option>
+        </select>
+    </div>
+
+    <div id="pagoTarjeta" class="d-none">
+        <label class="fw-bold">Tarjeta</label>
+        <input type="text" id="tarjetaNumero" maxlength="19"
+               class="form-control mb-2" placeholder="0000 0000 0000 0000">
+        <input type="month" class="form-control mb-2">
+        <input type="text" maxlength="3" class="form-control mb-2" placeholder="CVV">
+    </div>
+
+    <div id="pagoMovil" class="d-none">
+        <label class="fw-bold">Pago Yape</label>
+        <input type="text" name="numeroYape" maxlength="9"
+               class="form-control mb-2" placeholder="Número de Yape">
+        <input type="text" maxlength="6" class="form-control mb-2" placeholder="Código operación">
+    </div>
+
+    <div class="mb-3">
+        <label class="fw-bold">Comentario</label>
+        <textarea class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="d-flex gap-3">
+        <a href="/carrito" class="btn btn-secondary btn-uniform w-50">Atrás</a>
+        <button class="btn btn-success btn-uniform w-50">Confirmar Pago</button>
+    </div>
+
+</form>
+
+
+  </div>
+</div>
+
+<script>
+function openMenu(){ document.getElementById("sideMenu").style.left = "0"; }
+function closeMenu(){ document.getElementById("sideMenu").style.left = "-260px"; }
+
+document.addEventListener("click",(e)=>{
+    const menu = document.getElementById("sideMenu");
+    if(menu.style.left!=="0px") return;
+    if(!menu.contains(e.target) && e.target.getAttribute("onclick")!=="openMenu()"){
+        closeMenu();
+    }
+});
+
+/* POPUP */
+const userIcon=document.getElementById("userIcon");
+const popup=document.getElementById("userPopup");
+
+userIcon.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    popup.style.display==="block" ? hidePopup() : showPopup();
+});
+
+function showPopup(){
+    popup.style.display="block";
+    requestAnimationFrame(()=>popup.classList.add("fade-in"));
+}
+function hidePopup(){
+    popup.classList.remove("fade-in");
+    popup.classList.add("fade-out");
+    setTimeout(()=>{
+        popup.style.display="none";
+        popup.classList.remove("fade-out");
+    },250);
+}
+
+document.addEventListener("click",(e)=>{
+    if(!popup.contains(e.target) && e.target!==userIcon && popup.style.display==="block"){
+        hidePopup();
+    }
+});
+
+/* ENTREGA */
+modalidad.addEventListener("change",()=>{
+    const isDelivery = modalidad.value==="DELIVERY";
+    direccionBox.classList.toggle("d-none",!isDelivery);
+    referenciaBox.classList.toggle("d-none",!isDelivery);
+});
+
+/* MÉTODO PAGO */
+metodo.addEventListener("change",()=>{
+    pagoTarjeta.classList.add("d-none");
+    pagoMovil.classList.add("d-none");
+    if(metodo.value==="TARJETA") pagoTarjeta.classList.remove("d-none");
+    if(metodo.value==="YAPE") pagoMovil.classList.remove("d-none");
+});
+
+/* TARJETA */
+tarjetaNumero.addEventListener("input",()=>{
+    let v = tarjetaNumero.value.replace(/\D/g,"").substring(0,16);
+    tarjetaNumero.value = v.replace(/(.{4})/g,"$1 ").trim();
+});
+</script>
+
+</body>
+</html>

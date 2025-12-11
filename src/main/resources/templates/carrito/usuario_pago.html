@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Pago | Smart Store</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+		  
+    <link rel="stylesheet"
+		  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	  
+
+    <style>
+        body {
+            background:#f4f6f9;
+            font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background:#0A3D62;
+            padding:14px 30px;
+        }
+        .navbar a {
+            color:white !important;
+            font-weight:600;
+            text-decoration:none;
+        }
+
+        /* CARD PRINCIPAL */
+        .card-box {
+            background:white;
+            padding:35px;
+            max-width:900px;
+            margin:40px auto;
+            border-radius:14px;
+            box-shadow:0 4px 18px rgba(0,0,0,0.08);
+            border:1px solid #e5e5e5;
+        }
+
+        .page-title {
+            font-weight:700;
+            text-align:center;
+            margin-bottom:25px;
+        }
+
+        .table th {
+            background:#0A3D62;
+            color:white;
+        }
+
+        .btn-primary-custom {
+            background:#0A3D62;
+            color:white;
+            border:none;
+            font-weight:600;
+        }
+        .btn-primary-custom:hover {
+            background:#062742;
+            color:white;
+        }
+
+		.nav-icon-link {
+		    font-size:20px;
+		    color:white !important;
+		    display:inline-flex;
+		    align-items:center;
+		    justify-content:center;
+		    cursor:pointer;
+		}
+		.nav-icon-link {
+				    font-size:25px;
+				    color:white !important;
+				    display:inline-flex;
+				    align-items:center;
+				    justify-content:center;
+				    cursor:pointer;
+				}
+
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+
+        <a class="navbar-brand" href="/">Smart Store</a>
+
+        <div class="ms-auto d-flex align-items-center gap-4">
+
+			<div class="ms-auto d-flex align-items-center gap-4">
+			    <span id="userIcon" class="nav-icon-link d-flex align-items-center" style="font-size:20px; cursor:pointer;">
+			        <i class="bi bi-person-circle"></i>
+
+			        <!-- SEPARACIÓN DEL TEXTO -->
+			        <span style="margin-left:8px;">
+			            <span sec:authentication="principal.nombre"></span>
+			            <span sec:authentication="principal.apellido"></span>
+			        </span>
+			    </span>
+			</div>
+			
+
+            <!-- Login -->
+            <a th:href="@{/login}" class="btn btn-outline-light btn-sm"
+               sec:authorize="!isAuthenticated()">Ingresar</a>
+        </div>
+    </div>
+</nav>
+
+
+
+<div class="card-box">
+
+    <h2 class="page-title">Confirmar compra</h2>
+
+    <!-- ALERTAS -->
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+    <!-- RESUMEN -->
+    <h4 class="fw-bold mb-3">Resumen del pedido</h4>
+
+    <table class="table table-bordered text-center">
+        <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody th:each="item : ${carrito}">
+        <tr>
+            <td th:text="${item.producto.nombre}"></td>
+            <td th:text="${item.cantidad}"></td>
+            <td th:text="'S/ ' + ${item.subtotal}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3 class="text-end mt-3 fw-bold">Total: <span th:text="'S/ ' + ${total}"></span></h3>
+
+    <!-- FORMULARIO -->
+    <form th:action="@{/carrito-usuario/pago/confirmar}" method="post" class="mt-4">
+
+        <!-- DNI -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">DNI</label>
+            <input type="text" name="dni" class="form-control"
+                   maxlength="8" pattern="[0-9]{8}" required>
+        </div>
+		
+		<!-- ⭐ NUEVO: CELULAR -->
+		   <div class="mb-3">
+		       <label class="fw-bold">Número de Celular</label>
+		       <input type="text" name="numero" required maxlength="9"
+		              pattern="[0-9]{9}" class="form-control" placeholder="Ingrese número de celular">
+		   </div>
+
+        <!-- Modalidad -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Modalidad de entrega</label>
+            <select name="modalidad" id="modalidad" class="form-select" required>
+                <option value="">Seleccione...</option>
+                <option value="RECOJO">Recojo en tienda</option>
+                <option value="DELIVERY">Delivery</option>
+            </select>
+        </div>
+
+        <!-- Dirección -->
+        <div class="mb-3 d-none" id="direccionBox">
+            <label class="form-label fw-bold">Dirección</label>
+            <input type="text" name="direccion" id="direccion" class="form-control">
+        </div>
+
+        <div class="mb-3 d-none" id="referenciaBox">
+            <label class="form-label fw-bold">Referencia</label>
+            <input type="text" name="referencia" id="referencia" class="form-control">
+        </div>
+
+        <!-- Método de Pago -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Método de pago</label>
+            <select name="metodo" id="metodo" class="form-select" required>
+                <option value="">Seleccione...</option>
+                <option value="TARJETA">Tarjeta</option>
+                <option value="YAPE">Yape</option>
+            </select>
+        </div>
+
+        <!-- TARJETA -->
+        <div id="pagoTarjeta" class="mt-3 d-none">
+            <label class="form-label fw-bold">Datos de tarjeta</label>
+
+            <input type="text" class="form-control mb-2"
+                   name="tarjetaNumero" id="tarjetaNumero"
+                   placeholder="0000 0000 0000 0000" maxlength="19">
+
+            <input type="month" id="tarjetaVencimiento"
+                   name="tarjetaVencimiento" class="form-control mb-2">
+
+            <input type="text" maxlength="3" id="tarjetaCVV"
+                   name="tarjetaCVV" class="form-control mb-2"
+                   placeholder="CVV">
+        </div>
+
+        <!-- YAPE -->
+        <div id="pagoMovil" class="mt-3 d-none">
+            <label class="form-label fw-bold">Pago Yape</label>
+
+            <input type="text" maxlength="9"
+                   name="numeroYape" id="numeroYape"
+                   class="form-control mb-2"
+                   placeholder="Número de celular">
+
+            <input type="text" maxlength="6"
+                   name="movilCodigo" id="movilCodigo"
+                   class="form-control mb-2"
+                   placeholder="Código de operación">
+        </div>
+
+        <!-- Comentario -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Comentario (opcional)</label>
+            <textarea class="form-control" name="comentario" rows="3"></textarea>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="d-flex gap-3">
+            <a href="/carrito-usuario" class="btn btn-secondary w-50">Atrás</a>
+            <button class="btn btn-primary-custom w-50">Confirmar pago</button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    const modalidad = document.getElementById("modalidad");
+    const direccionBox = document.getElementById("direccionBox");
+    const referenciaBox = document.getElementById("referenciaBox");
+
+    const direccion = document.getElementById("direccion");
+    const referencia = document.getElementById("referencia");
+
+    const metodo = document.getElementById("metodo");
+    const pagoTarjeta = document.getElementById("pagoTarjeta");
+    const pagoMovil = document.getElementById("pagoMovil");
+
+    const tarjetaNumero = document.getElementById("tarjetaNumero");
+    const numeroYape = document.getElementById("numeroYape");
+    const movilCodigo = document.getElementById("movilCodigo");
+    const tarjetaVencimiento = document.getElementById("tarjetaVencimiento");
+    const tarjetaCVV = document.getElementById("tarjetaCVV");
+
+    // Mostrar campos si es delivery
+    modalidad.addEventListener("change", () => {
+        const delivery = modalidad.value === "DELIVERY";
+        direccionBox.classList.toggle("d-none", !delivery);
+        referenciaBox.classList.toggle("d-none", !delivery);
+
+        direccion.required = delivery;
+        referencia.required = delivery;
+    });
+
+    // Métodos de pago
+    metodo.addEventListener("change", () => {
+
+        pagoTarjeta.classList.add("d-none");
+        pagoMovil.classList.add("d-none");
+
+        tarjetaNumero.required =
+        tarjetaVencimiento.required =
+        tarjetaCVV.required =
+        numeroYape.required =
+        movilCodigo.required = false;
+
+        if (metodo.value === "TARJETA") {
+            pagoTarjeta.classList.remove("d-none");
+            tarjetaNumero.required = true;
+            tarjetaVencimiento.required = true;
+            tarjetaCVV.required = true;
+        }
+
+        if (metodo.value === "YAPE") {
+            pagoMovil.classList.remove("d-none");
+            numeroYape.required = true;
+            movilCodigo.required = true;
+        }
+    });
+
+    // Formatear tarjeta
+    tarjetaNumero.addEventListener("input", () => {
+        let val = tarjetaNumero.value.replace(/\D/g, "").substring(0, 16);
+        tarjetaNumero.value = val.match(/.{1,4}/g)?.join(" ") || "";
+    });
+</script>
+
+</body>
+</html>

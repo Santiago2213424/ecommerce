@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Productos | Smart Store Admin</title>
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+		
+  <link rel="stylesheet"
+	    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+		
+  <style>
+      body {
+          background: #f4f6f9;
+          font-family: 'Poppins', sans-serif;
+      }
+
+      /* NAVBAR */
+      .navbar {
+          background: #0A3D62;
+          padding: 14px 30px !important;
+      }
+      .navbar a {
+          color: white !important;
+          font-weight: 600;
+          text-decoration: none !important;
+          font-size: 18px;
+      }
+
+      /* POPUP USUARIO */
+      #userPopup {
+          display: none;
+          position: absolute;
+          right: 0;
+          top: 35px;
+          background: white;
+          color: black;
+          padding: 18px 20px;
+          border-radius: 12px;
+          border: 1px solid #dcdcdc;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+          width: 230px;
+          text-align: center;
+          z-index: 5000;
+
+          /* Estado inicial invisible */
+          opacity: 0;
+          transform: translateY(-10px);
+          transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+
+      .fade-in {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
+      }
+
+      .fade-out {
+          opacity: 0 !important;
+          transform: translateY(-10px) !important;
+      }
+
+      #userPopup a {
+          color: rgb(0, 0, 160) !important;
+          font-weight: 600;
+          display: block;
+          margin-top: 10px;
+      }
+
+      #userPopup a.logout-btn {
+          background: #ff4d4d;
+          color: white !important;
+          font-weight: bold;
+          padding: 10px 0;
+          border-radius: 8px;
+          margin-top: 12px;
+          display: block;
+      }
+	  
+	  #userPopup hr {
+	  	    margin: 6px 0;     
+	  	}
+
+	  	#userPopup .logout-btn {
+	  	    margin-top: 10px;   
+	  	    display: block;
+	  	    width: 100%;      
+	  	}
+
+      /* SIDEBAR DESPLEGABLE */
+      #sideMenu {
+          position: fixed;
+          top: 0;
+          left: -260px;
+          width: 260px;
+          height: 100vh;
+          background: #0A3D62;
+          color: white;
+          padding: 20px;
+          transition: left .3s ease-in-out;
+          z-index: 3000;
+      }
+
+      #sideMenu a {
+          display: block;
+          color: white !important;
+          padding: 10px;
+          border-radius: 6px;
+          margin-bottom: 6px;
+          text-decoration: none;
+      }
+
+      #sideMenu a:hover {
+          background: #07456F;
+      }
+
+      #closeMenu {
+          font-size: 26px;
+          cursor: pointer;
+          margin-bottom: 15px;
+      }
+
+      /* TABLA */
+      .card {
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      }
+
+      table img {
+          border-radius: 10px;
+          object-fit: cover;
+      }
+
+      /* Alertas */
+      .alert-flotante {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 9999;
+          min-width: 350px;
+          padding: 12px 18px;
+          border-radius: 10px;
+          font-size: 15px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      }
+
+      /* Buscador */
+      .search-container {
+          display: flex;
+          margin-bottom: 15px;
+      }
+      .search-container input {
+          flex: 1;
+          border-radius: 8px;
+          border: 1px solid #ced4da;
+          padding: 8px 10px;
+      }
+	  .nav-icon-link {
+	      font-size:25px;
+	      color:white !important;
+	      display:inline-flex;
+	      align-items:center;
+	      justify-content:center;
+	      cursor:pointer;
+	  }
+
+	  
+  </style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <span style="font-size:26px; cursor:pointer; color:white;" onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+
+		<!-- 🛒 CARRITO -->
+		<a th:href="@{/carrito}" class="nav-icon-link">
+		    <i class="bi bi-cart3"></i>
+		</a>
+
+		<!-- 👤 USUARIO -->
+		<div sec:authorize="isAuthenticated()" class="position-relative">
+		    <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+		        <i class="bi bi-person-circle"></i>
+		    </span>
+
+		    <div id="userPopup">
+		        <p style="margin:0; font-size:18px; font-weight:700;">
+		            Hola <span sec:authentication="principal.nombre"></span>!
+		        </p>
+
+		        <a th:href="@{/perfil}">Ver perfil</a>
+		        <a th:href="@{/mis-pedidos}">Mis compras</a>
+		        <hr>
+		        <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+		    </div>
+		</div>
+
+    </div>
+</nav>
+
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+
+    <a href="/dashboard">Pagina Principal</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+	<a href="/usuarios">Usuarios</a> 
+	<a href="/estadisticas">Estadisticas</a>
+</div>
+
+
+<!-- CONTENIDO -->
+<div class="container mt-4">
+
+  <h2 class="fw-bold mb-4">Lista de Productos</h2>
+  <div th:if="${successMessage}" class="alert alert-success text-center alert-flotante">
+      <span th:text="${successMessage}"></span>
+  </div>
+
+  <div th:if="${errorMessage}" class="alert alert-danger text-center alert-flotante">
+      <span th:text="${errorMessage}"></span>
+  </div>
+
+  <a href="/products/new" class="btn btn-success mb-3">+ Agregar Producto</a>
+
+  <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Buscar por nombre o categoría...">
+  </div>
+
+  <div class="card p-3">
+      <table class="table table-hover align-middle" id="productsTable">
+          <thead class="table-dark">
+          <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Cantidad</th>
+              <th>Imagen</th>
+              <th class="text-center">Acciones</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <tr th:each="p : ${products}">
+              <td th:text="${p.id}"></td>
+              <td th:text="${p.nombre}"></td>
+              <td th:text="${p.categoria != null ? p.categoria.nombre : 'Sin categoría'}"></td>
+              <td>S/ <span th:text="${p.precio}"></span></td>
+              <td th:text="${p.cantidad}"></td>
+              <td><img th:src="@{'/uploads/' + ${p.imagen}}" width="80" height="80"></td>
+
+              <td class="text-center">
+                  <a th:href="@{'/products/edit/' + ${p.id}}"
+                     class="btn btn-warning btn-sm">Editar</a>
+
+                  <a th:href="@{'/products/delete/' + ${p.id}}"
+                     class="btn btn-danger btn-sm"
+                     onclick="return confirm('¿Seguro que deseas eliminar este producto?');">
+                      Eliminar
+                  </a>
+              </td>
+          </tr>
+          </tbody>
+      </table>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+// =======================
+//    SIDEBAR
+// =======================
+function openMenu() {
+    document.getElementById("sideMenu").style.left = "0";
+}
+
+function closeMenu() {
+    document.getElementById("sideMenu").style.left = "-260px";
+}
+
+document.addEventListener("click", function(e) {
+    const menu = document.getElementById("sideMenu");
+    const isOpen = menu.style.left === "0px";
+
+    if (!isOpen) return;
+
+    const inside = menu.contains(e.target) ||
+                   e.target.getAttribute("onclick") === "openMenu()";
+
+    if (!inside) closeMenu();
+});
+
+
+// =======================
+//   POPUP USUARIO
+// =======================
+const userIcon = document.getElementById("userIcon");
+const popup = document.getElementById("userPopup");
+
+function showPopup() {
+    popup.style.display = "block";
+    requestAnimationFrame(() => popup.classList.add("fade-in"));
+}
+
+function hidePopup() {
+    popup.classList.remove("fade-in");
+    popup.classList.add("fade-out");
+
+    setTimeout(() => {
+        popup.style.display = "none";
+        popup.classList.remove("fade-out");
+    }, 250);
+}
+
+if (userIcon) {
+
+    userIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        if (popup.style.display === "block") {
+            hidePopup();
+        } else {
+            showPopup();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target) && popup.style.display === "block") {
+            hidePopup();
+        }
+    });
+}
+
+
+// =======================
+//      BUSCADOR
+// =======================
+document.getElementById('searchInput').addEventListener('input', function () {
+
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#productsTable tbody tr');
+
+    rows.forEach(row => {
+        const name = row.children[1].textContent.toLowerCase();
+        const category = row.children[2].textContent.toLowerCase();
+
+        row.style.display = name.includes(filter) || category.includes(filter)
+            ? ""
+            : "none";
+    });
+
+});
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.alert-flotante').forEach(alert => {
+        setTimeout(() => {
+            alert.style.transition = 'opacity .5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }, 4000);
+    });
+});
+
+</script>
+
+</body>
+</html>

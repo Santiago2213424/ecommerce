@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Carrito Admin | Smart Store</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link rel="stylesheet"
+		  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">	  
+
+    <style>
+        body {
+            background:#f4f6f9;
+            font-family:'Poppins', sans-serif;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background:#0A3D62;
+            padding:14px 30px !important;
+        }
+        .navbar a {
+            color:white !important;
+            font-weight:600;
+            text-decoration:none !important;
+            font-size:18px;
+        }
+
+        /* SIDEBAR */
+        #sideMenu {
+            position:fixed;
+            top:0; left:-260px;
+            width:260px;
+            height:100vh;
+            background:#0A3D62;
+            color:white;
+            padding:20px;
+            transition:left .3s ease-in-out;
+            z-index:3000;
+        }
+        #sideMenu a {
+            display:block;
+            padding:10px;
+            border-radius:6px;
+            margin-bottom:6px;
+            text-decoration:none;
+            color:white !important;
+        }
+        #sideMenu a:hover { background:#07456F; }
+        #closeMenu {
+            font-size:26px;
+            cursor:pointer;
+            margin-bottom:15px;
+        }
+
+        /* POPUP USUARIO */
+        #userPopup {
+            position:absolute;
+            right:0;
+            top:35px;
+            width:230px;
+            padding:18px 20px;
+            background:white;
+            color:black;
+            border-radius:12px;
+            border:1px solid #dcdcdc;
+            box-shadow:0 4px 15px rgba(0,0,0,0.25);
+            display:none;
+            opacity:0;
+            transform:translateY(-10px);
+            transition:.25s;
+            z-index:5000;
+        }
+        .fade-in { opacity:1 !important; transform:translateY(0) !important; }
+        .fade-out { opacity:0 !important; transform:translateY(-10px) !important; }
+        #userPopup a {
+            display:block;
+            font-weight:600;
+            margin-top:10px;
+            color:rgb(0,0,160) !important;
+        }
+        #userPopup .logout-btn {
+            margin-top:12px;
+            background:#ff4d4d;
+            color:white !important;
+            padding:10px 0;
+            border-radius:8px;
+        }
+
+        /* PRODUCTOS */
+        .product-card {
+            background:white;
+            border-radius:14px;
+            padding:18px;
+            border:1px solid #e5e5e5;
+            box-shadow:0 3px 10px rgba(0,0,0,0.08);
+            transition:.2s;
+        }
+        .product-card:hover { transform:scale(1.01); }
+        .product-img {
+            height:180px;
+            width:100%;
+            border-radius:10px;
+            object-fit:cover;
+        }
+        .line {
+            display:flex;
+            justify-content:space-between;
+            padding:4px 0;
+            font-size:14px;
+        }
+
+        /* TOTAL */
+        .total-box {
+            background:white;
+            border-radius:12px;
+            padding:20px;
+            border:1px solid #e5e5e5;
+            box-shadow:0 3px 10px rgba(0,0,0,0.07);
+        }
+
+        .btn-principal {
+            background:#0A3D62;
+            color:white;
+            padding:10px 18px;
+            border-radius:999px;
+            font-weight:600;
+        }
+        .btn-principal:hover { background:#062742; }
+		
+		/* POPUP USUARIO */
+		#userPopup {
+		    position:absolute;
+		    right:0;
+		    top:35px;
+		    width:230px;
+		    padding:18px 20px;
+		    background:white;
+		    color:black;
+		    border-radius:12px;
+		    border:1px solid #dcdcdc;
+		    box-shadow:0 4px 15px rgba(0,0,0,0.25);
+		    display:none;
+		    opacity:0;
+		    transform:translateY(-10px);
+		    transition:opacity .25s ease, transform .25s ease;
+		    text-align:center;
+		    z-index:5000;
+		}
+
+		#userPopup a {
+		    display:block;
+		    margin-top:10px;
+		    font-weight:600;
+		    color:rgb(0, 0, 160) !important;
+		    text-decoration:none;
+		}
+
+		#userPopup hr {
+		    margin:12px 0;
+		}
+
+		#userPopup .logout-btn {
+		            margin-top:12px;
+		            background:#ff4d4d;
+		            color:white !important;
+		            padding:10px 0;
+		            border-radius:8px;
+		            display:block;
+		            font-weight:700;
+		        }
+		
+		.nav-icon-link {
+				    font-size:25px;
+				    color:white !important;
+				    display:inline-flex;
+				    align-items:center;
+				    justify-content:center;
+				    cursor:pointer;
+				}
+				
+				#userPopup hr {
+						    margin: 6px 0;    
+						}
+
+						#userPopup .logout-btn {
+						    margin-top: 14px;  
+						    display: block;
+						    width: 100%;       
+						}		
+
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <span style="font-size:26px; cursor:pointer; color:white;" onclick="openMenu()">&#9776;</span>
+
+    <a class="navbar-brand ms-3" href="/dashboard">Smart Store Admin</a>
+
+    <div class="ms-auto d-flex align-items-center gap-4">
+
+		<a th:href="@{/carrito}" class="nav-icon-link">
+				    <i class="bi bi-cart3"></i>
+				</a>
+
+				<!-- 👤 USUARIO -->
+				<div sec:authorize="isAuthenticated()" class="position-relative">
+				    <span id="userIcon" class="nav-icon-link" style="font-size:27px;">
+				        <i class="bi bi-person-circle"></i>
+				    </span>
+
+				    <div id="userPopup">
+				        <p style="margin:0; font-size:18px; font-weight:700;">
+				            Hola <span sec:authentication="principal.nombre"></span>!
+				        </p>
+
+				        <a th:href="@{/perfil}">Ver perfil</a>
+				        <a th:href="@{/mis-pedidos}">Mis compras</a>
+				        <hr>
+				        <a th:href="@{/logout}" class="logout-btn">Cerrar sesión</a>
+				    </div>
+				</div>
+    </div>
+</nav>
+
+<!-- SIDEBAR -->
+<div id="sideMenu">
+    <div id="closeMenu" onclick="closeMenu()">✖</div>
+
+    <a href="/dashboard">Dashboard</a>
+    <a href="/products">Productos</a>
+    <a href="/categorias">Categorías</a>
+    <a href="/ventas">Reporte de Ventas</a>
+	<a href="/usuarios">Usuarios</a> 
+	<a href="/estadisticas">Estadisticas</a>
+</div>
+
+<!-- CONTENIDO -->
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Mi Carrito</h2>
+        <a href="/dashboard" class="btn-principal">← Seguir comprando</a>
+    </div>
+
+    <!-- CARRITO VACÍO -->
+    <div th:if="${#lists.isEmpty(carrito)}" class="text-center py-5 text-muted">
+        <h4 class="fw-bold">Tu carrito está vacío</h4>
+        <p>Agrega productos para verlos aquí.</p>
+        <a href="/dashboard" class="btn-principal mt-3">Explorar productos</a>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div class="row g-4" th:if="${!#lists.isEmpty(carrito)}">
+
+        <div class="col-md-4" th:each="item : ${carrito}">
+            <div class="product-card">
+
+                <img th:src="@{'/uploads/' + ${item.producto.imagen}}" class="product-img">
+
+                <h5 class="mt-2 fw-bold" th:text="${item.producto.nombre}"></h5>
+
+                <div class="line text-muted">
+                    <span>Precio</span>
+                    <span th:text="'S/ ' + ${item.producto.precio}"></span>
+                </div>
+
+                <div class="line text-muted">
+                    <span>Cantidad</span>
+                    <span th:text="${item.cantidad}"></span>
+                </div>
+
+                <div class="line fw-bold">
+                    <span>Subtotal</span>
+                    <span th:text="'S/ ' + ${item.subtotal}"></span>
+                </div>
+
+                <a th:href="@{'/carrito/eliminar/' + ${item.producto.id}}"
+                   class="btn btn-danger w-100 mt-3">
+                    Eliminar
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOTAL -->
+    <div th:if="${!#lists.isEmpty(carrito)}" class="total-box mt-4">
+        <div class="d-flex justify-content-between">
+            <h4>Total a pagar:</h4>
+            <h4 th:text="'S/ ' + ${total}"></h4>
+        </div>
+
+        <a href="/carrito/pago" class="btn btn-success w-100 mt-3 py-2 fw-bold">
+            Ir a pagar ✔
+        </a>
+    </div>
+</div>
+
+<!-- JS -->
+<script>
+function openMenu(){ document.getElementById("sideMenu").style.left = "0"; }
+function closeMenu(){ document.getElementById("sideMenu").style.left = "-260px"; }
+
+document.addEventListener("click",(e)=>{
+    const menu=document.getElementById("sideMenu");
+    if(menu.style.left!=="0px") return;
+    if(!menu.contains(e.target) && e.target.getAttribute("onclick")!=="openMenu()"){
+        closeMenu();
+    }
+});
+
+const userIcon=document.getElementById("userIcon");
+const popup=document.getElementById("userPopup");
+
+userIcon.addEventListener("click",(e)=>{
+    e.stopPropagation();
+    popup.style.display==="block" ? hidePopup() : showPopup();
+});
+
+function showPopup(){
+    popup.style.display="block";
+    requestAnimationFrame(()=>popup.classList.add("fade-in"));
+}
+function hidePopup(){
+    popup.classList.remove("fade-in");
+    popup.classList.add("fade-out");
+    setTimeout(()=>{
+        popup.style.display="none";
+        popup.classList.remove("fade-out");
+    },250);
+}
+
+document.addEventListener("click",(e)=>{
+    if(!popup.contains(e.target) && e.target!==userIcon && popup.style.display==="block"){
+        hidePopup();
+    }
+});
+</script>
+
+</body>
+</html>

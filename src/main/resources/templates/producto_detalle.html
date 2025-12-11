@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${producto.nombre} + ' | Smart Store'">Producto</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+		  <link rel="stylesheet"
+		  		  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background:#f4f6f9;
+            font-family:'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background:#0A3D62;
+            padding:14px 30px;
+        }
+        .navbar a {
+            color:white !important;
+            font-weight:600;
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .product-box {
+            background:white;
+            border-radius:14px;
+            padding:25px;
+            margin-top:40px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+            border:1px solid #e5e5e5;
+        }
+
+        .product-img {
+            width:100%;
+            height:380px;
+            object-fit:cover;
+            border-radius:12px;
+        }
+
+        /* BOTONES */
+        .btn-buy {
+            background:#0A3D62;
+            color:white;
+            font-weight:600;
+            border-radius:999px;
+            padding:10px 18px;
+        }
+        .btn-buy:hover {
+            background:#062742;
+            color:white;
+        }
+
+        .btn-secondary {
+            border-radius:999px;
+            font-weight:600;
+        }
+		
+		.nav-icon-link {
+						    font-size:25px;
+						    color:white !important;
+						    display:inline-flex;
+						    align-items:center;
+						    justify-content:center;
+						    cursor:pointer;
+						}
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Smart Store</a>
+
+		<div class="ms-auto d-flex align-items-center gap-4">
+				    <span id="userIcon" class="nav-icon-link d-flex align-items-center" style="font-size:20px; cursor:pointer;">
+				        <i class="bi bi-person-circle"></i>
+
+				        <!-- SEPARACIÓN DEL TEXTO -->
+				        <span style="margin-left:8px;">
+				            <span sec:authentication="principal.nombre"></span>
+				            <span sec:authentication="principal.apellido"></span>
+				        </span>
+				    </span>
+				</div>
+    </div>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="container product-box">
+
+    <div class="row g-4">
+
+        <!-- Imagen -->
+        <div class="col-md-6">
+            <img th:src="@{'/uploads/' + ${producto.imagen}}" class="product-img">
+        </div>
+
+        <!-- Información -->
+        <div class="col-md-6">
+            <h2 class="fw-bold" th:text="${producto.nombre}"></h2>
+
+            <p class="text-muted mb-1">
+                Categoría:
+                <span th:text="${producto.categoria.nombre}"></span>
+            </p>
+
+            <h3 class="mt-3 text-danger fw-bold"
+                th:text="'S/ ' + ${producto.precio}"></h3>
+
+            <p class="text-success fw-bold">
+                Stock disponible: <span th:text="${producto.cantidad}"></span> unidades
+            </p>
+
+            <p class="mt-3" th:text="${producto.descripcion}"></p>
+
+            <!-- Selección cantidad -->
+            <form th:action="@{'/carrito-usuario/agregar/' + ${producto.id}}" method="post">
+
+                <label class="fw-bold mt-2">Cantidad:</label>
+                <input type="number" name="cantidad" class="form-control"
+                       value="1" min="1"
+                       th:attr="max=${producto.cantidad}"
+                       style="width:120px;" required>
+
+                <div class="mt-4 d-flex gap-3">
+
+                    <!-- Agregar -->
+                    <button class="btn btn-buy w-100"
+                            th:disabled="${producto.cantidad == 0}">
+                        🛒 Agregar al carrito
+                    </button>
+
+                    <!-- Volver -->
+                    <a href="/compras" class="btn btn-secondary w-100">
+                        ← Seguir comprando
+                    </a>
+
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
