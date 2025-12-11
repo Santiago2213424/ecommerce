@@ -25,6 +25,7 @@ public class DashboardController {
     @Autowired
     private VentaRepository ventaRepository;
 
+    //Dashboard    
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpServletResponse response) {
 
